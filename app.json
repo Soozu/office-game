@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Office Quiz Game",
+    "slug": "office-quiz-game",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Game Guessing Logo Design.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/Game Guessing Logo Design.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A90E2"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Game Guessing Logo Design.png",
+        "backgroundColor": "#4A90E2"
+      },
+      "package": "com.soozu.officequizgame"
+    },
+    "web": {
+      "favicon": "./assets/Game Guessing Logo Design.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1dafa117-e1c5-48ae-9262-e6fc28344403"
+      }
+    }
+  }
+}
