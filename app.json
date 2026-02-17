@@ -4,10 +4,17 @@
     "slug": "office-quiz-game",
     "version": "1.0.0",
     "orientation": "portrait",
+<<<<<<< HEAD
     "icon": "./assets/game-guessing-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/game-guessing-logo.png",
+=======
+    "icon": "./assets/Game Guessing Logo Design.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/Game Guessing Logo Design.png",
+>>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
       "resizeMode": "contain",
       "backgroundColor": "#4A90E2"
     },
@@ -19,13 +26,21 @@
     },
     "android": {
       "adaptiveIcon": {
+<<<<<<< HEAD
         "foregroundImage": "./assets/game-guessing-logo.png",
+=======
+        "foregroundImage": "./assets/Game Guessing Logo Design.png",
+>>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
         "backgroundColor": "#4A90E2"
       },
       "package": "com.soozu.officequizgame"
     },
     "web": {
+<<<<<<< HEAD
       "favicon": "./assets/game-guessing-logo.png"
+=======
+      "favicon": "./assets/Game Guessing Logo Design.png"
+>>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     },
     "extra": {
       "eas": {
