@@ -4,10 +4,7 @@
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-<<<<<<< HEAD
     "relay": "node server/relay.js",
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
@@ -18,32 +15,19 @@
     "@react-navigation/native-stack": "^6.9.17",
     "expo": "54.0.13",
     "expo-av": "^16.0.7",
-<<<<<<< HEAD
     "expo-network": "^8.0.8",
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
     "react-native": "0.81.4",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-<<<<<<< HEAD
     "react-native-tcp-socket": "^6.4.1",
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     "sharp": "^0.34.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-<<<<<<< HEAD
     "babel-preset-expo": "~54.0.0",
     "ws": "^8.19.0"
   },
   "private": true
 }
-=======
-    "babel-preset-expo": "~54.0.0"
-  },
-  "private": true
-}
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd

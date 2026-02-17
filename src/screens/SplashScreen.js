@@ -31,7 +31,7 @@ export default function SplashScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Animated.View 
+      <Animated.View
         style={[
           styles.logoContainer,
           {
@@ -40,12 +40,8 @@ export default function SplashScreen({ navigation }) {
           }
         ]}
       >
-        <Image 
-<<<<<<< HEAD
+        <Image
           source={require('../../assets/game-guessing-logo.png')}
-=======
-          source={require('../../assets/Game Guessing Logo Design.png')}
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
           style={styles.logoImage}
           resizeMode="contain"
         />

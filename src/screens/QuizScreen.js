@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -47,42 +46,11 @@ export default function QuizScreen({ route, navigation }) {
 
   const [questions] = useState(() => {
     const shuffled = [...questionPool];
-=======
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { questionsData } from '../data/questions';
-import { useLanguage } from '../contexts/LanguageContext';
-
-export default function QuizScreen({ route, navigation }) {
-  const { appId, questionCount } = route.params;
-  const { getLanguageSuffix } = useLanguage();
-  
-  // Get the appropriate language suffix and construct the key
-  const languageSuffix = getLanguageSuffix();
-  const languageAppId = appId + languageSuffix;
-  
-  // Combine all questions from all difficulty levels
-  const allQuestions = [
-    ...questionsData[languageAppId].easy,
-    ...questionsData[languageAppId].medium,
-    ...questionsData[languageAppId].hard
-  ];
-  
-  // Shuffle and select the specified number of questions
-  const [questions] = useState(() => {
-    // Fisher-Yates shuffle algorithm for better randomness
-    const shuffled = [...allQuestions];
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-<<<<<<< HEAD
     return shuffled.slice(0, targetQuestionCount);
-=======
-    return shuffled.slice(0, Math.min(questionCount, shuffled.length));
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   });
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -91,7 +59,6 @@ export default function QuizScreen({ route, navigation }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(1));
-<<<<<<< HEAD
   const [celebrationAnim] = useState(new Animated.Value(0));
   const [timeLeft, setTimeLeft] = useState(QUESTION_DURATION);
 
@@ -143,13 +110,10 @@ export default function QuizScreen({ route, navigation }) {
 
   const playCorrectSound = useCallback(() => playSound(correctSoundRef), [playSound]);
   const playWrongSound = useCallback(() => playSound(wrongSoundRef), [playSound]);
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
-<<<<<<< HEAD
   const handleTimeExpire = useCallback(() => {
     if (isAnswered) return;
     setIsAnswered(true);
@@ -194,8 +158,6 @@ export default function QuizScreen({ route, navigation }) {
     ]).start();
   }, [celebrationAnim]);
 
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   const handleAnswerPress = (answerIndex) => {
     if (isAnswered) return;
 
@@ -205,13 +167,10 @@ export default function QuizScreen({ route, navigation }) {
     if (answerIndex === currentQuestion.correctAnswer) {
       setScore(score + currentQuestion.points);
       setCorrectAnswers(correctAnswers + 1);
-<<<<<<< HEAD
       playCorrectSound();
       triggerCelebration();
     } else {
       playWrongSound();
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     }
   };
 
@@ -232,18 +191,14 @@ export default function QuizScreen({ route, navigation }) {
         }).start();
       });
     } else {
-      navigation.navigate('Result', { 
-        score, 
+      navigation.navigate('Result', {
+        score,
         correctAnswers,
         totalQuestions: questions.length,
         totalPoints: questions.reduce((sum, q) => sum + q.points, 0),
         appId,
-<<<<<<< HEAD
         questionCount: questions.length,
         difficulty
-=======
-        questionCount
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
       });
     }
   };
@@ -264,32 +219,11 @@ export default function QuizScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-<<<<<<< HEAD
       <ScrollView
-=======
-      
-      <View style={styles.header}>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
-          </View>
-          <Text style={styles.questionCounter}>
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </Text>
-        </View>
-        <View style={styles.scoreContainer}>
-          <Text style={styles.scoreLabel}>Score</Text>
-          <Text style={styles.scoreValue}>{score}</Text>
-        </View>
-      </View>
-
-      <ScrollView 
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-<<<<<<< HEAD
         <View style={styles.heroCard}>
           <View style={styles.progressMeta}>
             <Text style={styles.questionCounter}>
@@ -326,12 +260,6 @@ export default function QuizScreen({ route, navigation }) {
             <View style={styles.pointsPill}>
               <Text style={styles.pointsLabel}>+{currentQuestion.points} pts</Text>
             </View>
-=======
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <View style={styles.questionCard}>
-            <Text style={styles.question}>{currentQuestion.question}</Text>
-            <Text style={styles.pointsLabel}>+{currentQuestion.points} points</Text>
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
           </View>
 
           <View style={styles.optionsContainer}>
@@ -341,11 +269,7 @@ export default function QuizScreen({ route, navigation }) {
                 style={getOptionStyle(index)}
                 onPress={() => handleAnswerPress(index)}
                 disabled={isAnswered}
-<<<<<<< HEAD
                 activeOpacity={0.85}
-=======
-                activeOpacity={0.7}
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
               >
                 <View style={styles.optionNumber}>
                   <Text style={styles.optionNumberText}>{String.fromCharCode(65 + index)}</Text>
@@ -365,23 +289,15 @@ export default function QuizScreen({ route, navigation }) {
             <TouchableOpacity
               style={styles.nextButton}
               onPress={handleNext}
-<<<<<<< HEAD
               activeOpacity={0.85}
             >
               <Text style={styles.nextButtonText}>
                 {currentQuestionIndex < questions.length - 1 ? 'Next question' : 'See results'}
-=======
-              activeOpacity={0.8}
-            >
-              <Text style={styles.nextButtonText}>
-                {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
               </Text>
             </TouchableOpacity>
           )}
         </Animated.View>
       </ScrollView>
-<<<<<<< HEAD
       <Animated.View
         pointerEvents="none"
         style={[
@@ -401,8 +317,6 @@ export default function QuizScreen({ route, navigation }) {
       >
         <Text style={styles.celebrationText}>Great!</Text>
       </Animated.View>
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     </View>
   );
 }
@@ -410,7 +324,6 @@ export default function QuizScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-<<<<<<< HEAD
     backgroundColor: 'transparent',
   },
   content: {
@@ -444,27 +357,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 4,
     overflow: 'hidden',
-=======
-    backgroundColor: '#F5F7FA',
-  },
-  header: {
-    backgroundColor: '#4A90E2',
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-  },
-  progressContainer: {
-    marginBottom: 15,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   },
   progressFill: {
     height: '100%',
@@ -472,7 +364,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   questionCounter: {
-<<<<<<< HEAD
     color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '700',
@@ -585,78 +476,6 @@ const styles = StyleSheet.create({
   },
   wrongOption: {
     backgroundColor: 'rgba(231,76,60,0.15)',
-=======
-    color: '#E8F4FD',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  scoreLabel: {
-    color: '#E8F4FD',
-    fontSize: 16,
-  },
-  scoreValue: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  questionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 25,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  question: {
-    fontSize: 18,
-    color: '#2C3E50',
-    lineHeight: 26,
-    marginBottom: 10,
-  },
-  pointsLabel: {
-    fontSize: 14,
-    color: '#27AE60',
-    fontWeight: 'bold',
-  },
-  optionsContainer: {
-    marginBottom: 20,
-  },
-  option: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E8E8E8',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  correctOption: {
-    backgroundColor: '#D5F5E3',
-    borderColor: '#27AE60',
-  },
-  wrongOption: {
-    backgroundColor: '#FADBD8',
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
     borderColor: '#E74C3C',
   },
   disabledOption: {
@@ -666,7 +485,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-<<<<<<< HEAD
     backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -675,26 +493,11 @@ const styles = StyleSheet.create({
     color: '#E2E8F0',
     fontSize: 15,
     fontWeight: '600',
-=======
-    backgroundColor: '#4A90E2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  optionNumberText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   },
   optionText: {
     flex: 1,
     fontSize: 16,
-<<<<<<< HEAD
     color: '#E2E8F0',
-=======
-    color: '#2C3E50',
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   },
   checkmark: {
     fontSize: 24,
@@ -708,7 +511,6 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#4A90E2',
-<<<<<<< HEAD
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center',
@@ -716,23 +518,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
-=======
-    borderRadius: 12,
-    padding: 18,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
   },
   nextButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-<<<<<<< HEAD
   celebrationOverlay: {
     position: 'absolute',
     top: 0,
@@ -751,7 +542,5 @@ const styles = StyleSheet.create({
     textShadowRadius: 12,
     letterSpacing: 4,
   },
-=======
->>>>>>> df4fd4376f775ff067a6ef744ffe13c1667e16bd
 });
 
