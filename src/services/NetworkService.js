@@ -14,6 +14,7 @@ class NetworkService {
         this.messageHandlers = [];
         this.isHost = false;
         this.roomId = null;
+        this.playerId = null;
     }
 
     // ── Connect to the relay server ────────────────────────────────
@@ -60,6 +61,7 @@ class NetworkService {
                 const cleanup = this.onMessage((type, payload) => {
                     if (type === 'ROOM_CREATED') {
                         this.roomId = payload.roomId;
+                        this.playerId = payload.playerId;
                         cleanup();
                         resolve(payload.roomId);
                     }
@@ -86,6 +88,7 @@ class NetworkService {
 
                 const cleanup = this.onMessage((type, payload) => {
                     if (type === 'ROOM_JOINED') {
+                        this.playerId = payload.playerId;
                         cleanup();
                         resolve();
                     }
@@ -134,6 +137,7 @@ class NetworkService {
         this.messageHandlers = [];
         this.isHost = false;
         this.roomId = null;
+        this.playerId = null;
     }
 
     // ── Internal ───────────────────────────────────────────────────

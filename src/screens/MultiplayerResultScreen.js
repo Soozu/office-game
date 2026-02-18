@@ -1,32 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Audio } from 'expo-av';
 import congratsSfx from '../../assets/congrats.mp3';
 import { useMultiplayer } from '../contexts/MultiplayerContext';
 
-export default function MultiplayerResultScreen({ route, navigation }) {
-    const {
-        myScore, myCorrect, myName,
-        oppScore, oppCorrect, oppName,
-        totalQuestions, totalPoints,
-    } = route.params;
+const MEDALS = ['🥇', '🥈', '🥉'];
 
+export default function MultiplayerResultScreen({ route, navigation }) {
+    const { allPlayers, totalQuestions, totalPoints } = route.params;
     const { disconnect } = useMultiplayer();
 
     const [scaleAnim] = useState(new Animated.Value(0));
     const [fadeAnim] = useState(new Animated.Value(0));
     const [burstAnim] = useState(new Animated.Value(0));
 
-    const myPercentage = Math.round((myScore / totalPoints) * 100);
-    const oppPercentage = Math.round((oppScore / totalPoints) * 100);
-    const isWinner = myScore > oppScore;
-    const isDraw = myScore === oppScore;
+    // Sort players by score descending
+    const ranked = useMemo(
+        () => [...allPlayers].sort((a, b) => b.score - a.score),
+        [allPlayers],
+    );
+
+    // Find the current player's rank (1-indexed)
+    const myRank = useMemo(() => {
+        const idx = ranked.findIndex((p) => p.isSelf);
+        return idx >= 0 ? idx + 1 : ranked.length;
+    }, [ranked]);
 
     const getResultData = () => {
-        if (isDraw) return { emoji: '🤝', message: "It's a Draw!", color: '#F39C12' };
-        if (isWinner) return { emoji: '🏆', message: 'You Win!', color: '#27AE60' };
-        return { emoji: '😤', message: 'You Lost!', color: '#E74C3C' };
+        if (myRank === 1) return { emoji: '🏆', message: '1st Place!', color: '#27AE60' };
+        if (myRank === 2) return { emoji: '🥈', message: '2nd Place!', color: '#3498DB' };
+        if (myRank === 3) return { emoji: '🥉', message: '3rd Place!', color: '#E67E22' };
+        return { emoji: '😤', message: `${myRank}th Place`, color: '#E74C3C' };
     };
 
     const result = getResultData();
@@ -98,47 +103,52 @@ export default function MultiplayerResultScreen({ route, navigation }) {
                     </View>
                 </View>
 
-                {/* Head-to-head comparison */}
-                <Animated.View style={[styles.comparisonSection, { opacity: fadeAnim }]}>
-                    <Text style={styles.sectionTitle}>Head to Head</Text>
-                    <View style={styles.vsContainer}>
-                        {/* Player 1 (You) */}
-                        <View style={[styles.playerCard, isWinner && styles.winnerCard]}>
-                            {isWinner && <Text style={styles.crownIcon}>👑</Text>}
-                            <Text style={styles.playerName}>{myName}</Text>
-                            <Text style={styles.playerTag}>You</Text>
-                            <Text style={[styles.playerScore, { color: result.color }]}>{myScore}</Text>
-                            <Text style={styles.playerPts}>pts</Text>
-                            <View style={styles.playerStats}>
-                                <Text style={styles.playerStatText}>✅ {myCorrect}/{totalQuestions}</Text>
-                                <Text style={styles.playerStatText}>{myPercentage}%</Text>
+                {/* Ranked leaderboard */}
+                <Animated.View style={[styles.leaderboardSection, { opacity: fadeAnim }]}>
+                    <Text style={styles.sectionTitle}>🏆 Final Standings</Text>
+                    {ranked.map((p, idx) => {
+                        const percentage = totalPoints > 0 ? Math.round((p.score / totalPoints) * 100) : 0;
+                        return (
+                            <View
+                                key={idx}
+                                style={[
+                                    styles.playerRow,
+                                    p.isSelf && styles.playerRowSelf,
+                                    idx === 0 && styles.playerRowFirst,
+                                ]}
+                            >
+                                <Text style={styles.rankBadge}>
+                                    {idx < 3 ? MEDALS[idx] : `#${idx + 1}`}
+                                </Text>
+                                <View style={styles.playerInfo}>
+                                    <Text
+                                        style={[styles.playerName, p.isSelf && styles.playerNameSelf]}
+                                        numberOfLines={1}
+                                    >
+                                        {p.name}{p.isSelf ? ' (You)' : ''}
+                                    </Text>
+                                    <Text style={styles.playerStats}>
+                                        ✅ {p.correct}/{totalQuestions}  •  {percentage}%
+                                    </Text>
+                                </View>
+                                <View style={styles.scoreBlock}>
+                                    <Text style={[styles.playerScore, idx === 0 && { color: '#27AE60' }]}>
+                                        {p.score}
+                                    </Text>
+                                    <Text style={styles.playerPts}>pts</Text>
+                                </View>
                             </View>
-                        </View>
-
-                        {/* VS */}
-                        <View style={styles.vsBadge}>
-                            <Text style={styles.vsText}>VS</Text>
-                        </View>
-
-                        {/* Player 2 (Opponent) */}
-                        <View style={[styles.playerCard, !isWinner && !isDraw && styles.winnerCard]}>
-                            {!isWinner && !isDraw && <Text style={styles.crownIcon}>👑</Text>}
-                            <Text style={styles.playerName}>{oppName}</Text>
-                            <Text style={styles.playerTag}>Opponent</Text>
-                            <Text style={[styles.playerScore, { color: !isWinner && !isDraw ? '#27AE60' : '#94A3B8' }]}>
-                                {oppScore}
-                            </Text>
-                            <Text style={styles.playerPts}>pts</Text>
-                            <View style={styles.playerStats}>
-                                <Text style={styles.playerStatText}>✅ {oppCorrect}/{totalQuestions}</Text>
-                                <Text style={styles.playerStatText}>{oppPercentage}%</Text>
-                            </View>
-                        </View>
-                    </View>
+                        );
+                    })}
                 </Animated.View>
 
                 {/* Detail card */}
                 <Animated.View style={[styles.detailCard, { opacity: fadeAnim }]}>
+                    <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Total Players</Text>
+                        <Text style={styles.detailValue}>{ranked.length}</Text>
+                    </View>
+                    <View style={styles.separator} />
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Total Questions</Text>
                         <Text style={styles.detailValue}>{totalQuestions}</Text>
@@ -147,11 +157,6 @@ export default function MultiplayerResultScreen({ route, navigation }) {
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Max Points</Text>
                         <Text style={styles.detailValue}>{totalPoints}</Text>
-                    </View>
-                    <View style={styles.separator} />
-                    <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Score Difference</Text>
-                        <Text style={styles.detailValue}>{Math.abs(myScore - oppScore)} pts</Text>
                     </View>
                 </Animated.View>
 
@@ -199,28 +204,28 @@ const styles = StyleSheet.create({
     },
     emoji: { fontSize: 42 },
 
-    // Comparison
-    comparisonSection: { gap: 12 },
+    // Leaderboard
+    leaderboardSection: { gap: 10 },
     sectionTitle: { fontSize: 18, fontWeight: '700', color: '#E2E8F0' },
-    vsContainer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    playerCard: {
-        flex: 1, backgroundColor: 'rgba(15,23,42,0.6)', borderRadius: 22, padding: 18,
-        alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', gap: 4,
+    playerRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        backgroundColor: 'rgba(15,23,42,0.6)', borderRadius: 18, padding: 16,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    winnerCard: { borderColor: 'rgba(39,174,96,0.5)', backgroundColor: 'rgba(39,174,96,0.1)' },
-    crownIcon: { fontSize: 24 },
-    playerName: { fontSize: 16, fontWeight: '700', color: '#fff', textAlign: 'center' },
-    playerTag: { fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 },
-    playerScore: { fontSize: 32, fontWeight: '800', marginTop: 4 },
-    playerPts: { fontSize: 12, color: '#94A3B8', marginTop: -2 },
-    playerStats: { marginTop: 8, gap: 2, alignItems: 'center' },
-    playerStatText: { fontSize: 12, color: '#CBD5F5' },
-
-    vsBadge: {
-        width: 36, height: 36, borderRadius: 18,
-        backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center',
+    playerRowSelf: {
+        backgroundColor: 'rgba(74,144,226,0.15)', borderColor: 'rgba(74,144,226,0.35)',
     },
-    vsText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+    playerRowFirst: {
+        borderColor: 'rgba(39,174,96,0.5)', backgroundColor: 'rgba(39,174,96,0.1)',
+    },
+    rankBadge: { fontSize: 24, width: 36, textAlign: 'center' },
+    playerInfo: { flex: 1, gap: 2 },
+    playerName: { fontSize: 16, fontWeight: '700', color: '#fff' },
+    playerNameSelf: { color: '#7DC4FF' },
+    playerStats: { fontSize: 12, color: '#CBD5F5' },
+    scoreBlock: { alignItems: 'center' },
+    playerScore: { fontSize: 28, fontWeight: '800', color: '#fff' },
+    playerPts: { fontSize: 11, color: '#94A3B8', marginTop: -2 },
 
     // Detail
     detailCard: {

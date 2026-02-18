@@ -12,14 +12,11 @@ export default function MultiplayerQuizScreen({ route, navigation }) {
     const {
         questions,
         isHost,
-        opponentName,
-        opponentScore,
-        opponentCorrect,
-        opponentAnswered,
         playerName,
+        players,
+        allOpponentsFinished,
         submitAnswer,
         endGame,
-        opponentFinished,
     } = useMultiplayer();
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -137,22 +134,32 @@ export default function MultiplayerQuizScreen({ route, navigation }) {
         }
     };
 
-    // Navigate to results when both players finish
+    // Navigate to results when all players finish
     useEffect(() => {
-        if (finished && opponentFinished && !hasNavigated.current) {
+        if (finished && allOpponentsFinished && !hasNavigated.current) {
             hasNavigated.current = true;
+            // Build results array: self + all opponents
+            const allPlayers = [
+                {
+                    name: playerName,
+                    score: scoreRef.current,
+                    correct: correctRef.current,
+                    isSelf: true,
+                },
+                ...Object.entries(players).map(([id, p]) => ({
+                    name: p.name || 'Player',
+                    score: p.score || 0,
+                    correct: p.correctAnswers || 0,
+                    isSelf: false,
+                })),
+            ];
             navigation.replace('MultiplayerResult', {
-                myScore: scoreRef.current,
-                myCorrect: correctRef.current,
-                myName: playerName,
-                oppScore: opponentScore,
-                oppCorrect: opponentCorrect,
-                oppName: opponentName,
+                allPlayers,
                 totalQuestions: questions.length,
                 totalPoints: questions.reduce((sum, q) => sum + q.points, 0),
             });
         }
-    }, [finished, opponentFinished, opponentScore, opponentCorrect]);
+    }, [finished, allOpponentsFinished, players]);
 
     const getOptionStyle = (index) => {
         if (!isAnswered) return styles.option;
@@ -169,18 +176,45 @@ export default function MultiplayerQuizScreen({ route, navigation }) {
             <StatusBar style="light" />
             <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* Opponent status bar */}
-                <View style={styles.opponentBar}>
-                    <View style={styles.opponentInfo}>
-                        <Text style={styles.opponentLabel}>👤 {opponentName || 'Opponent'}</Text>
-                        <Text style={styles.opponentScoreText}>Score: {opponentScore}</Text>
-                    </View>
-                    <View style={styles.opponentProgress}>
-                        <Text style={styles.opponentProgressText}>
-                            Q{Math.min(opponentAnswered + 2, questions.length)}/{questions.length}
-                        </Text>
-                    </View>
-                </View>
+                {/* Leaderboard strip — all players sorted by score */}
+                {(() => {
+                    const leaderboard = [
+                        { name: playerName || 'You', score, isSelf: true },
+                        ...Object.entries(players).map(([id, p]) => ({
+                            name: p.name || 'Player',
+                            score: p.score || 0,
+                            answered: p.answered ?? -1,
+                            isSelf: false,
+                        })),
+                    ].sort((a, b) => b.score - a.score);
+
+                    return (
+                        <View style={styles.leaderboardStrip}>
+                            <Text style={styles.leaderboardTitle}>🏆 Leaderboard</Text>
+                            {leaderboard.map((p, idx) => (
+                                <View
+                                    key={idx}
+                                    style={[
+                                        styles.leaderboardRow,
+                                        p.isSelf && styles.leaderboardRowSelf,
+                                    ]}
+                                >
+                                    <Text style={styles.leaderboardRank}>#{idx + 1}</Text>
+                                    <Text
+                                        style={[
+                                            styles.leaderboardName,
+                                            p.isSelf && styles.leaderboardNameSelf,
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {p.name}{p.isSelf ? ' (You)' : ''}
+                                    </Text>
+                                    <Text style={styles.leaderboardScore}>{p.score} pts</Text>
+                                </View>
+                            ))}
+                        </View>
+                    );
+                })()}
 
                 {/* Your status */}
                 <View style={styles.heroCard}>
@@ -202,10 +236,6 @@ export default function MultiplayerQuizScreen({ route, navigation }) {
                         <View style={styles.statBlock}>
                             <Text style={styles.statLabel}>Your Score</Text>
                             <Text style={styles.statValue}>{score}</Text>
-                        </View>
-                        <View style={styles.statBlock}>
-                            <Text style={styles.statLabel}>vs Opponent</Text>
-                            <Text style={styles.statValue}>{opponentScore}</Text>
                         </View>
                     </View>
                 </View>
@@ -251,9 +281,9 @@ export default function MultiplayerQuizScreen({ route, navigation }) {
                         </TouchableOpacity>
                     )}
 
-                    {finished && !opponentFinished && (
+                    {finished && !allOpponentsFinished && (
                         <View style={styles.waitingCard}>
-                            <Text style={styles.waitingText}>⏳ Waiting for {opponentName || 'opponent'} to finish...</Text>
+                            <Text style={styles.waitingText}>⏳ Waiting for other players to finish...</Text>
                         </View>
                     )}
                 </Animated.View>
@@ -281,19 +311,26 @@ const styles = StyleSheet.create({
     content: { flex: 1 },
     scrollContent: { paddingHorizontal: 20, paddingTop: 50, paddingBottom: 40, gap: 16 },
 
-    opponentBar: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        backgroundColor: 'rgba(230,126,34,0.2)', borderRadius: 16, padding: 14,
-        borderWidth: 1, borderColor: 'rgba(230,126,34,0.35)',
+    // Leaderboard strip
+    leaderboardStrip: {
+        backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 18, padding: 14,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', gap: 6,
     },
-    opponentInfo: { gap: 2 },
-    opponentLabel: { color: '#FBBF24', fontSize: 14, fontWeight: '700' },
-    opponentScoreText: { color: '#E2E8F0', fontSize: 13 },
-    opponentProgress: {
-        backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 999,
-        paddingHorizontal: 12, paddingVertical: 6,
+    leaderboardTitle: {
+        color: '#FBBF24', fontSize: 14, fontWeight: '700', letterSpacing: 1, marginBottom: 4,
     },
-    opponentProgressText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+    leaderboardRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 10,
+        paddingHorizontal: 12, paddingVertical: 8,
+    },
+    leaderboardRowSelf: {
+        backgroundColor: 'rgba(74,144,226,0.2)', borderWidth: 1, borderColor: 'rgba(74,144,226,0.35)',
+    },
+    leaderboardRank: { color: '#FBBF24', fontSize: 14, fontWeight: '800', width: 28 },
+    leaderboardName: { color: '#E2E8F0', fontSize: 14, fontWeight: '600', flex: 1 },
+    leaderboardNameSelf: { color: '#7DC4FF' },
+    leaderboardScore: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
     heroCard: {
         backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 28, padding: 22,

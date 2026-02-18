@@ -29,10 +29,9 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
 
     const {
         createRoom, joinRoom, startGame, isConnected,
-        opponentName, roomId, serverIp, disconnect, gameReady,
+        players, connectedCount, roomId, disconnect, gameReady,
     } = useMultiplayer();
 
-    const [relayIp, setRelayIp] = useState(serverIp || '');
     const [joinCode, setJoinCode] = useState('');
     const [selectedApp, setSelectedApp] = useState(null);
     const [selectedDifficulty, setSelectedDifficulty] = useState(null);
@@ -51,11 +50,10 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
     const [cqPoints, setCqPoints] = useState('10');
 
     const handleCreateRoom = async () => {
-        if (!relayIp.trim()) return;
         try {
             setIsLoading(true);
             setError('');
-            await createRoom(playerName, relayIp.trim());
+            await createRoom(playerName);
             setRoomCreated(true);
         } catch (err) {
             setError('Failed to create room: ' + (err?.message || err));
@@ -65,11 +63,11 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
     };
 
     const handleJoinRoom = async () => {
-        if (!relayIp.trim() || !joinCode.trim()) return;
+        if (!joinCode.trim()) return;
         try {
             setIsLoading(true);
             setError('');
-            await joinRoom(relayIp.trim(), joinCode.trim().toUpperCase(), playerName);
+            await joinRoom(joinCode.trim().toUpperCase(), playerName);
         } catch (err) {
             setError('Failed to join: ' + (err?.message || err));
         } finally {
@@ -288,24 +286,11 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
             {/* Step 1: Enter relay server IP */}
             {!roomCreated ? (
                 <View style={styles.statusCard}>
-                    <Text style={styles.statusLabel}>Step 1 — Connect to Relay Server</Text>
-                    <Text style={styles.ipHint}>
-                        Enter the IP of the computer running the relay server{'\n'}
-                        (same machine as your Expo dev server)
-                    </Text>
-                    <TextInput
-                        style={styles.ipInput}
-                        value={relayIp}
-                        onChangeText={setRelayIp}
-                        placeholder="e.g. 192.168.1.100"
-                        placeholderTextColor="rgba(255,255,255,0.3)"
-                        keyboardType="numeric"
-                        autoCapitalize="none"
-                    />
+                    <Text style={styles.statusLabel}>Create a Room</Text>
                     <TouchableOpacity
-                        style={[styles.connectButton, (!relayIp.trim() || isLoading) && styles.buttonDisabled]}
+                        style={[styles.connectButton, isLoading && styles.buttonDisabled]}
                         onPress={handleCreateRoom}
-                        disabled={!relayIp.trim() || isLoading}
+                        disabled={isLoading}
                         activeOpacity={0.85}
                     >
                         {isLoading ? (
@@ -324,13 +309,25 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
                         <View style={styles.roomCodeDisplay}>
                             <Text style={styles.roomCodeLabel}>Room Code</Text>
                             <Text style={styles.roomCodeValue}>{roomId}</Text>
-                            <Text style={styles.ipHint}>Share this code with your opponent</Text>
+                            <Text style={styles.ipHint}>Share this code with other players</Text>
                         </View>
-                        <View style={[styles.connectionBadge, isConnected ? styles.connectedBadge : styles.waitingBadge]}>
+                        <View style={[styles.connectionBadge, connectedCount > 0 ? styles.connectedBadge : styles.waitingBadge]}>
                             <Text style={styles.connectionBadgeText}>
-                                {isConnected ? `✅ ${opponentName || 'Player'} connected!` : '⏳ Waiting for opponent...'}
+                                {connectedCount > 0
+                                    ? `✅ ${connectedCount} player${connectedCount !== 1 ? 's' : ''} connected`
+                                    : '⏳ Waiting for players...'}
                             </Text>
                         </View>
+                        {connectedCount > 0 && (
+                            <View style={styles.playerList}>
+                                {Object.entries(players).map(([id, p]) => (
+                                    <View key={id} style={styles.playerListItem}>
+                                        <Text style={styles.playerListIcon}>👤</Text>
+                                        <Text style={styles.playerListName}>{p.name || 'Joining...'}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* Quiz Mode Toggle */}
@@ -416,11 +413,11 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
                         activeOpacity={0.85}
                     >
                         <Text style={styles.startButtonText}>
-                            {!isConnected
-                                ? 'Waiting for opponent...'
+                            {connectedCount === 0
+                                ? 'Waiting for players...'
                                 : quizMode === 'custom'
                                     ? `Start with ${customQuestions.length} question${customQuestions.length !== 1 ? 's' : ''} 🚀`
-                                    : 'Start Game 🚀'}
+                                    : `Start Game (${connectedCount + 1} players) 🚀`}
                         </Text>
                     </TouchableOpacity>
                 </>
@@ -433,19 +430,8 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
         <>
             {!isConnected ? (
                 <View style={styles.statusCard}>
-                    <Text style={styles.statusLabel}>Connect to Game</Text>
-                    <Text style={styles.ipHint}>Enter the relay server IP and the room code from the host</Text>
-
-                    <Text style={styles.fieldLabel}>Server IP</Text>
-                    <TextInput
-                        style={styles.ipInput}
-                        value={relayIp}
-                        onChangeText={setRelayIp}
-                        placeholder="e.g. 192.168.1.100"
-                        placeholderTextColor="rgba(255,255,255,0.3)"
-                        keyboardType="numeric"
-                        autoCapitalize="none"
-                    />
+                    <Text style={styles.statusLabel}>Join a Game</Text>
+                    <Text style={styles.ipHint}>Enter the room code from the host</Text>
 
                     <Text style={styles.fieldLabel}>Room Code</Text>
                     <TextInput
@@ -459,9 +445,9 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
                     />
 
                     <TouchableOpacity
-                        style={[styles.connectButton, (!relayIp.trim() || !joinCode.trim() || isLoading) && styles.buttonDisabled]}
+                        style={[styles.connectButton, (!joinCode.trim() || isLoading) && styles.buttonDisabled]}
                         onPress={handleJoinRoom}
-                        disabled={!relayIp.trim() || !joinCode.trim() || isLoading}
+                        disabled={!joinCode.trim() || isLoading}
                         activeOpacity={0.85}
                     >
                         {isLoading ? (
@@ -480,9 +466,16 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
                     <View style={styles.waitingContainer}>
                         <ActivityIndicator color="#FBBF24" size="large" />
                         <Text style={styles.waitingText}>Waiting for host to start the game...</Text>
-                        {opponentName ? (
-                            <Text style={styles.opponentInfo}>Playing against: {opponentName}</Text>
-                        ) : null}
+                        {connectedCount > 0 && (
+                            <View style={styles.playerList}>
+                                {Object.entries(players).map(([id, p]) => (
+                                    <View key={id} style={styles.playerListItem}>
+                                        <Text style={styles.playerListIcon}>👤</Text>
+                                        <Text style={styles.playerListName}>{p.name || 'Player'}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
                     </View>
                 </View>
             )}
@@ -508,8 +501,8 @@ export default function MultiplayerLobbyScreen({ route, navigation }) {
                         <Text style={styles.heroTitle}>{isHostMode ? 'Game Room' : 'Join Game'}</Text>
                         <Text style={styles.heroSubtitle}>
                             {isHostMode
-                                ? `Hosting as ${playerName}. Create a room, then share the code with your opponent.`
-                                : `Joining as ${playerName}. Enter the server IP and room code to connect.`}
+                                ? `Hosting as ${playerName}. Create a room, then share the code with other players.`
+                                : `Joining as ${playerName}. Enter the room code to connect.`}
                         </Text>
                     </View>
 
@@ -672,4 +665,16 @@ const styles = StyleSheet.create({
     waitingContainer: { alignItems: 'center', gap: 14, paddingVertical: 20 },
     waitingText: { color: '#E2E8F0', fontSize: 16, fontWeight: '600', textAlign: 'center' },
     opponentInfo: { color: '#FBBF24', fontSize: 15, fontWeight: '700' },
+    // Player list
+    playerList: {
+        gap: 8, marginTop: 4,
+    },
+    playerListItem: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12,
+        paddingHorizontal: 14, paddingVertical: 10,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    },
+    playerListIcon: { fontSize: 18 },
+    playerListName: { color: '#E2E8F0', fontSize: 15, fontWeight: '600' },
 });
